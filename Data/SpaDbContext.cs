@@ -39,7 +39,6 @@ namespace Spa.Data
                     .IsRequired()
                     .HasDefaultValue("Regular");
 
-                // Correo y Password son opcionales (clientes invitados no los tienen)
                 e.Property(c => c.Correo)
                     .IsRequired(false);
 
@@ -85,6 +84,12 @@ namespace Spa.Data
                 e.Property(a => a.Password)
                     .IsRequired()
                     .HasDefaultValue(string.Empty);
+            });
+
+            // ── Cita: evita que dos personas reserven el mismo servicio en la misma fecha/hora ──
+            modelBuilder.Entity<Cita>(e =>
+            {
+                e.HasIndex(c => new { c.ServicioId, c.FechaHora }).IsUnique();
             });
         }
     }

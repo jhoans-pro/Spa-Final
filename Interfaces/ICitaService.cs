@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Spa.Models;
 
 namespace Spa.Interfaces
 {
     public interface ICitaService
     {
-        Cita AgendarCita(
+        Task<Cita> AgendarCitaAsync(
             Cliente cliente,
             Servicio servicio,
             DateTime fecha,

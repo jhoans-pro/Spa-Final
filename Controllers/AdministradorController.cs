@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Spa.Data;
 using Spa.Interfaces;
 using Spa.Models;
+using System.Threading.Tasks;
 
 namespace Spa.Controllers
 {
@@ -17,61 +18,58 @@ namespace Spa.Controllers
             _promocionService = promocionService;
         }
 
-        // ── PANEL ────────────────────────────────────────────────────────────
-        public IActionResult Panel()
+        public async Task<IActionResult> Panel()
         {
-            ViewBag.TotalClientes = _context.Clientes.Count();
-            ViewBag.TotalCitas = _context.Citas.Count();
-            ViewBag.TotalPromociones = _context.Promociones.Count();
-            ViewBag.TotalServicios = _context.Servicios.Count();
+            ViewBag.TotalClientes = await _context.Clientes.CountAsync();
+            ViewBag.TotalCitas = await _context.Citas.CountAsync();
+            ViewBag.TotalPromociones = await _context.Promociones.CountAsync();
+            ViewBag.TotalServicios = await _context.Servicios.CountAsync();
 
-            var citas = _context.Citas
+            var citas = await _context.Citas
+                .AsNoTracking()
                 .Include(c => c.Cliente)
                 .Include(c => c.Servicio)
                 .OrderByDescending(c => c.Id)
-                .ToList();
+                .ToListAsync();
 
-            ViewBag.Clientes = _context.Clientes
+            ViewBag.Clientes = await _context.Clientes
+                .AsNoTracking()
                 .OrderByDescending(c => c.Id)
-                .ToList();
+                .ToListAsync();
 
             return View(citas);
         }
 
-        // ── ELIMINAR CITA ────────────────────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult EliminarCita(int id)
+        public async Task<IActionResult> EliminarCita(int id)
         {
-            var cita = _context.Citas.Find(id);
+            var cita = await _context.Citas.FindAsync(id);
             if (cita != null)
             {
                 _context.Citas.Remove(cita);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 TempData["Mensaje"] = "Cita eliminada correctamente.";
             }
             return RedirectToAction("Panel");
         }
 
-        // ── ELIMINAR CLIENTE ─────────────────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult EliminarCliente(int id)
+        public async Task<IActionResult> EliminarCliente(int id)
         {
-            var cliente = _context.Clientes.Find(id);
+            var cliente = await _context.Clientes.FindAsync(id);
             if (cliente != null)
             {
-                // Eliminar primero las citas asociadas (FK constraint)
-                var citasCliente = _context.Citas.Where(c => c.ClienteId == id).ToList();
+                var citasCliente = await _context.Citas.Where(c => c.ClienteId == id).ToListAsync();
                 _context.Citas.RemoveRange(citasCliente);
                 _context.Clientes.Remove(cliente);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 TempData["Mensaje"] = "Cliente y sus citas eliminados correctamente.";
             }
             return RedirectToAction("Panel");
         }
 
-        // ── PROMOCIONES ──────────────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> Promociones()
         {
@@ -116,7 +114,6 @@ namespace Spa.Controllers
             return RedirectToAction("Promociones");
         }
 
-        // ── LOGIN ────────────────────────────────────────────────────────────
         [HttpGet]
         public IActionResult Login()
         {
@@ -124,10 +121,10 @@ namespace Spa.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(string usuario, string password)
+        public async Task<IActionResult> Login(string usuario, string password)
         {
-            var admin = _context.Administradores
-                .FirstOrDefault(a =>
+            var admin = await _context.Administradores
+                .FirstOrDefaultAsync(a =>
                     a.Usuario == usuario &&
                     a.Password == password);
 
