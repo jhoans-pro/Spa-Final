@@ -1,206 +1,357 @@
-﻿@{
+@{
     ViewData["Title"] = "Cita";
 }
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-calendar {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+        font-size: 13px !important;
+        border-radius: 8px !important;
+        border: 1px solid #dadce0 !important;
+        box-shadow: 0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15) !important;
+        padding: 12px !important;
+        width: 280px !important;
+        background: #ffffff !important;
+    }
+    .flatpickr-months { margin-bottom: 8px !important; }
+    .flatpickr-current-month { font-weight: 600 !important; color: #202124 !important; font-size: 14px !important; }
+    span.flatpickr-weekday { color: #5f6368 !important; font-weight: 500 !important; font-size: 11px !important; }
+    span.flatpickr-weekday:first-child { color: #d93025 !important; font-weight: 700 !important; }
+    .flatpickr-day { color: #3c4043 !important; border-radius: 50% !important; height: 34px !important; line-height: 34px !important; margin: 1px !important; }
+    .flatpickr-day:hover { background: #f1f3f4 !important; }
+    .flatpickr-day.selected { background: #43281c !important; border-color: #43281c !important; color: #ffffff !important; }
+
+    .flatpickr-day.domingo-bloqueado {
+        background-color: #fce8e6 !important;
+        color: #c5221f !important;
+        border: 1px solid #fad2cf !important;
+        cursor: not-allowed !important;
+        opacity: 0.85 !important;
+        text-decoration: line-through;
+    }
+
+    .caja-hora-corta {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 4px 8px;
+        width: fit-content;
+    }
+
+    .select-tiempo-pequeno {
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 1rem;
+        color: #333;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 4px 2px;
+        text-align: center;
+    }
+
+    .select-tiempo-pequeno option {
+        color: #333;
+    }
+
+    #imgServicio {
+        transition: opacity 0.3s ease-in-out;
+        object-fit: cover;
+    }
+</style>
+
 <section class="contacto-cita">
     <h1 class="titulo">AGENDA TU CITA</h1>
 
     <div class="cita-container">
         <div class="cita-imagen">
-            <img src="/images/cita.png" alt="Mujer relajándose en spa">
+            <img id="imgServicio" src="/images/cita.png" alt="Servicio Spa">
         </div>
 
         <div class="cita-formulario">
             <h2>SEPARA TU CITA</h2>
             @if (TempData["MensajeExito"] != null)
             {
-                <div style="
-                    background-color: #e8f5e9;
-                    color: #1b5e20;
-                    border: 1px solid #81c784;
-                    padding: 12px;
-                    margin-bottom: 18px;
-                    border-radius: 8px;
-                    text-align: center;
-                    font-weight: bold;"
-                    role="alert">
-
+                <div style="background-color: #e8f5e9; color: #1b5e20; border: 1px solid #81c784; padding: 12px; margin-bottom: 18px; border-radius: 8px; text-align: center; font-weight: bold;" role="alert">
                     @TempData["MensajeExito"]
                 </div>
             }
 
-
-            <form asp-action="Crear"
-                  method="post"
-                  id="formCita"
-                  class="form-cita">
-                <!-- Campo DNI solo en su propia fila -->
+            <form asp-action="Crear" method="post" id="formCita" class="form-cita" novalidate>
                 <div class="form-group">
                     <label for="dni">DNI</label>
-
                     <input type="text"
-                    id="dni"
-                    name="dni"
-                    maxlength="8"
-                    minlength="8"
-                    inputmode="numeric"
-                    pattern="[0-9]{8}"
-                    title="El DNI debe contener exactamente 8 números."
-                    autocomplete="off"
-                    required>
-
-                    <small id="errorDni"
-                    style="color: #b00020; display: block; margin-top: 4px;">
-                    </small>
-
-                    @Html.ValidationMessage(
-                    "dni",
-                    "",
-                    new { style = "color: #b00020; display: block; margin-top: 4px;" }
-                    )
+                           id="dni"
+                           name="dni"
+                           maxlength="8"
+                           inputmode="numeric"
+                           placeholder="Ingrese 8 dígitos numéricos"
+                           autocomplete="off"
+                           required>
+                    <small id="errorDni" style="color: #b00020; display: none; margin-top: 4px; font-size: 0.85em; font-weight: bold;"></small>
+                    @Html.ValidationMessage("dni", "", new { style = "color: #b00020; display: block; margin-top: 4px;" })
                 </div>
 
-                <!-- Nombre y Apellido en una misma fila -->
                 <div class="form-row">
                     <div class="form-group">
                         <label for="nombre">Nombre</label>
-                        <input type="text" id="nombre" name="nombre" required>
+                        <input type="text" id="nombre" name="nombre" maxlength="30" placeholder="Ej. María Del Carmen" autocomplete="off" required>
+                        <small id="errorNombre" style="color: #b00020; display: none; margin-top: 4px; font-size: 0.85em;"></small>
                     </div>
 
                     <div class="form-group">
                         <label for="apellido">Apellido</label>
-                        <input type="text" id="apellido" name="apellido" required>
+                        <input type="text" id="apellido" name="apellido" maxlength="20" placeholder="Ej. De La Riva Agüero" autocomplete="off" required>
+                        <small id="errorApellido" style="color: #b00020; display: none; margin-top: 4px; font-size: 0.85em;"></small>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="fecha">Fecha</label>
-                    <input type="date" id="fecha" name="fecha" required>
-                    @Html.ValidationMessage(
-                        "fecha",
-                        "",
-                        new
-                        {
-                            style = "color: #b00020; display: block; margin-top: 4px;"
-                        }
-                    )
+                    <input type="text" id="fecha" name="fecha" placeholder="dd/mm/aaaa" required readonly style="background-color: #fff; cursor: pointer;">
+                    <small id="errorFecha" style="color: #b00020; background-color: #ffebee; border: 1px solid #ffcdd2; padding: 6px 10px; border-radius: 4px; display: none; margin-top: 5px; font-weight: bold;"></small>
+                    @Html.ValidationMessage("fecha", "", new { style = "color: #b00020; display: block; margin-top: 4px;" })
                 </div>
 
                 <div class="form-group">
-                    <label for="hora">Hora</label>
-                    <input type="time" id="hora" name="hora" min="10:00" max="21:00" required>
-                    <small id="ayudaHora" style="color:#8B4513;">Horario de atención: 10:00 am - 9:00 pm</small>
-                    @Html.ValidationMessage(
-                        "hora",
-                        "",
-                        new
-                        {
-                            style = "color: #b00020; display: block; margin-top: 4px;"
-                        }
-                    )
+                    <label>Hora de Atención</label>
+                    <div>
+                        <div class="caja-hora-corta" id="bordeHoraContenedor">
+                            <select id="selectHora" class="select-tiempo-pequeno" required>
+                                <option value="">HH</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                                <option value="13">13</option>
+                                <option value="14">14</option>
+                                <option value="15">15</option>
+                                <option value="16">16</option>
+                                <option value="17">17</option>
+                                <option value="18">18</option>
+                                <option value="19">19</option>
+                                <option value="20">20</option>
+                            </select>
+
+                            <span style="font-weight: bold; font-size: 1.1rem; color: #43281c;">:</span>
+
+                            <select id="selectMinuto" class="select-tiempo-pequeno" required>
+                                <option value="">MM</option>
+                                <option value="00">00</option>
+                                <option value="15">15</option>
+                                <option value="30">30</option>
+                                <option value="45">45</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="hora" name="hora" required>
+
+                    <small id="ayudaHora" style="color:#8B4513; display: block; margin-top: 4px;">Horario de atención: 10:00 a 21:00</small>
+                    <small id="errorHora" style="color: #b00020; background-color: #ffebee; border: 1px solid #ffcdd2; padding: 4px 8px; border-radius: 4px; display: none; margin-top: 4px; font-weight: bold;"></small>
+                    @Html.ValidationMessage("hora", "", new { style = "color: #b00020; display: block; margin-top: 4px;" })
                 </div>
 
                 <div class="form-group">
                     <label for="servicio">Servicio</label>
                     <select id="servicio" name="servicio" required>
-                        
-
-                            <option value="">Tipo Servicio</option>
-
-                            <option value="masaje-relajante"
-                                    selected="@(ViewBag.ServicioSeleccionado == "masaje-relajante")">
-                                Masaje Relajante
-                            </option>
-
-                            <option value="masaje-piedras-calientes"
-                                    selected="@(ViewBag.ServicioSeleccionado == "masaje-piedras-calientes")">
-                                Masaje de piedras calientes
-                            </option>
-
-                            <option value="masaje-descontracturante"
-                                    selected="@(ViewBag.ServicioSeleccionado == "masaje-descontracturante")">
-                                Masaje descontracturante
-                            </option>
-
-                            <option value="facial-express"
-                                    selected="@(ViewBag.ServicioSeleccionado == "facial-express")">
-                                Facial express
-                            </option>
-
-                            <option value="facial-profundo"
-                                    selected="@(ViewBag.ServicioSeleccionado == "facial-profundo")">
-                                Facial profundo
-                            </option>
-
-                            <option value="facial-rejuvenecedor"
-                                    selected="@(ViewBag.ServicioSeleccionado == "facial-rejuvenecedor")">
-                                Facial rejuvenecedor
-                            </option>
-
-                            <option value="camara-vapor"
-                                    selected="@(ViewBag.ServicioSeleccionado == "camara-vapor")">
-                                Cámara a vapor
-                            </option>
-
-                            <option value="camara-seca"
-                                    selected="@(ViewBag.ServicioSeleccionado == "camara-seca")">
-                                Cámara seca
-                            </option>
-
-                            <option value="tina-hidromasaje"
-                                    selected="@(ViewBag.ServicioSeleccionado == "tina-hidromasaje")">
-                                Tina de hidromasajes
-                            </option>
-                            
-                            @if (ViewBag.Promociones != null)
+                        <option value="" data-imagen="/images/cita.png">Tipo Servicio</option>
+                        <option value="masaje-relajante" data-imagen="/images/masaje-relajante.png" selected="@(ViewBag.ServicioSeleccionado == "masaje-relajante")">Masaje Relajante</option>
+                        <option value="masaje-piedras-calientes" data-imagen="/images/masaje-piedras-calientes.png" selected="@(ViewBag.ServicioSeleccionado == "masaje-piedras-calientes")">Masaje de piedras calientes</option>
+                        <option value="masaje-descontracturante" data-imagen="/images/masaje-descontracturante.png" selected="@(ViewBag.ServicioSeleccionado == "masaje-descontracturante")">Masaje descontracturante</option>
+                        <option value="facial-express" data-imagen="/images/facial-express.png" selected="@(ViewBag.ServicioSeleccionado == "facial-express")">Facial express</option>
+                        <option value="facial-profundo" data-imagen="/images/facial-profundo.png" selected="@(ViewBag.ServicioSeleccionado == "facial-profundo")">Facial profundo</option>
+                        <option value="facial-rejuvenecedor" data-imagen="/images/facial-rejuvenecedor.png" selected="@(ViewBag.ServicioSeleccionado == "facial-rejuvenecedor")">Facial rejuvenecedor</option>
+                        <option value="camara-vapor" data-imagen="/images/camara-vapor.png" selected="@(ViewBag.ServicioSeleccionado == "camara-vapor")">Cámara a vapor</option>
+                        <option value="camara-seca" data-imagen="/images/camara-seca.png" selected="@(ViewBag.ServicioSeleccionado == "camara-seca")">Cámara seca</option>
+                        <option value="tina-hidromasaje" data-imagen="/images/tina-hidromasaje.png" selected="@(ViewBag.ServicioSeleccionado == "tina-hidromasaje")">Tina de hidromasajes</option>
+                        @if (ViewBag.Promociones != null)
+                        {
+                            foreach (var promo in ViewBag.Promociones)
                             {
-                                foreach (var promo in ViewBag.Promociones)
-                                {
-                                    <option value="promo-db-@promo.Id" data-precio="@promo.Precio">
-                                        @promo.Nombre
-                                    </option>
-                                }
+                                <option value="promo-db-@promo.Id" data-precio="@promo.Precio" data-imagen="/images/cita.png">@promo.Nombre</option>
                             }
-                            
+                        }
                     </select>
                 </div>
+
                 <div class="form-group">
                     <label for="duracion">Duración</label>
                     <select id="duracion" name="duracion" required>
                         <option value="">Selecciona una duración</option>
                     </select>
                 </div>
+
                 @Html.AntiForgeryToken()
-                <!-- Después de la selección de duración -->
-                <div id="campoPersonas" class="form-group campo-personas" style="display:none;">
-                    <label for="personas">¿Cuántas personas?</label>
-
-                    <input type="number"
-                           id="personas"
-                           name="cantidadPersonas"
-                           min="1"
-                           max="20"
-                           value="1" />
-
-                    <small>Máximo 20 personas</small>
-                </div>
-
-                <p id="precioFinal" style="font-weight: bold; margin-top: 10px;"></p>
-                <input type="hidden" id="precioInput" name="Precio" value="0" />
-
-                <button type="submit" class="btn-agendar">Agendar</button>
-                <div class="decoracion-floral">
-                    <!-- Decoración floral se agregará con CSS -->
-                </div>
+                <button type="submit" class="btn-agendar">Agendar Cita</button>
             </form>
         </div>
-
     </div>
 </section>
-<!-- Modal de confirmación de cita -->
-<div id="modalCita" class="modal" style="display:none;">
-    <div class="modal-content">
-        <span class="close" id="cerrarModal">&times;</span>
-        <h2>Tu cita ha sido registrada</h2>
-        <p id="resumenCita"></p>
-    </div>
-</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
+<script>
+    flatpickr("#fecha", {
+        locale: flatpickr.l10ns.es,
+        minDate: "today",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d/m/Y",
+        disable: [
+            function(date) {
+                return (date.getDay() === 0);
+            }
+        ],
+        onDayCreate: function(dObj, dStr, fp, dayElem) {
+            if (dayElem.dateObj.getDay() === 0) {
+                dayElem.classList.add("domingo-bloqueado");
+                dayElem.title = "No atendemos los domingos";
+            }
+        }
+    });
+
+    const servicioSelect = document.getElementById("servicio");
+    const imgServicio = document.getElementById("imgServicio");
+
+    function actualizarImagenServicio() {
+        if (!servicioSelect || !imgServicio) return;
+        const opcion = servicioSelect.options[servicioSelect.selectedIndex];
+        let ruta = opcion ? opcion.getAttribute("data-imagen") : null;
+
+        if (!ruta || ruta.trim() === "") {
+            ruta = "/images/cita.png";
+        }
+
+        if (!ruta.startsWith("/") && !ruta.startsWith("http")) {
+            ruta = "/images/" + ruta;
+        }
+
+        imgServicio.style.opacity = "0.2";
+        setTimeout(() => {
+            imgServicio.src = ruta;
+            imgServicio.style.opacity = "1";
+        }, 150);
+    }
+
+    servicioSelect.addEventListener("change", actualizarImagenServicio);
+    actualizarImagenServicio();
+
+    const selectHora = document.getElementById("selectHora");
+    const selectMinuto = document.getElementById("selectMinuto");
+    const inputHoraOculto = document.getElementById("hora");
+    const errorHora = document.getElementById("errorHora");
+    const bordeHora = document.getElementById("bordeHoraContenedor");
+
+    function sincronizarHora() {
+        const h = selectHora.value;
+        const m = selectMinuto.value;
+
+        const opcion45 = selectMinuto.querySelector('option[value="45"]');
+        if (h === "20") {
+            if (opcion45) opcion45.disabled = true;
+            if (m === "45") selectMinuto.value = "30";
+        } else {
+            if (opcion45) opcion45.disabled = false;
+        }
+
+        if (selectHora.value && selectMinuto.value) {
+            inputHoraOculto.value = `${selectHora.value}:${selectMinuto.value}`;
+            errorHora.style.display = "none";
+            bordeHora.style.borderColor = "#2e7d32";
+        } else {
+            inputHoraOculto.value = "";
+            bordeHora.style.borderColor = "#ccc";
+        }
+    }
+
+    selectHora.addEventListener("change", sincronizarHora);
+    selectMinuto.addEventListener("change", sincronizarHora);
+
+    const dniInput = document.getElementById("dni");
+    const errorDni = document.getElementById("errorDni");
+
+    function validarDocumentoInput() {
+        if (!dniInput) return false;
+        dniInput.value = dniInput.value.replace(/\D/g, '').slice(0, 8);
+
+        if (dniInput.value.length === 0) {
+            errorDni.style.display = "none";
+            dniInput.style.borderColor = "";
+            return false;
+        }
+
+        if (dniInput.value.length < 8) {
+            errorDni.innerText = "El DNI debe tener exactamente 8 dígitos.";
+            errorDni.style.display = "block";
+            dniInput.style.borderColor = "#b00020";
+            return false;
+        }
+
+        errorDni.style.display = "none";
+        dniInput.style.borderColor = "#2e7d32";
+        return true;
+    }
+
+    dniInput.addEventListener("input", validarDocumentoInput);
+    dniInput.addEventListener("keydown", (e) => {
+        if (["Backspace", "Tab", "ArrowLeft", "ArrowRight", "Delete"].includes(e.key)) return;
+        if (!/\d/.test(e.key)) e.preventDefault();
+    });
+
+    const nombreInput = document.getElementById("nombre");
+    const apellidoInput = document.getElementById("apellido");
+    const errorNombre = document.getElementById("errorNombre");
+    const errorApellido = document.getElementById("errorApellido");
+
+    function formatearTitleCaseConLimitePalabras(valor, maxPalabras, maxChars) {
+        let limpio = valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').replace(/\s+/g, ' ');
+        let palabras = limpio.split(' ');
+        if (palabras.length > maxPalabras) {
+            palabras = palabras.slice(0, maxPalabras);
+            limpio = palabras.join(' ');
+        }
+        return limpio.slice(0, maxChars).toLowerCase().replace(/(^|\s)\S/g, l => l.toUpperCase());
+    }
+
+    function vincularReglaTexto(input, errorSpan, maxPalabras, maxChars) {
+        input.addEventListener("input", () => {
+            const original = input.value;
+            const formateado = formatearTitleCaseConLimitePalabras(original, maxPalabras, maxChars);
+            if (original !== formateado) input.value = formateado;
+
+            if (input.value.trim().length > 0 && input.value.trim().length < 2) {
+                errorSpan.innerText = "Mínimo 2 letras.";
+                errorSpan.style.display = "block";
+                input.style.borderColor = "#b00020";
+            } else {
+                errorSpan.style.display = "none";
+                input.style.borderColor = input.value.trim().length > 0 ? "#2e7d32" : "";
+            }
+        });
+    }
+
+    vincularReglaTexto(nombreInput, errorNombre, 3, 30);
+    vincularReglaTexto(apellidoInput, errorApellido, 4, 20);
+
+    document.getElementById("formCita").addEventListener("submit", function(e) {
+        const docValido = validarDocumentoInput();
+        const fechaValida = !!document.getElementById("fecha").value;
+        const horaValida = !!inputHoraOculto.value;
+
+        if (!horaValida) {
+            errorHora.innerText = "Por favor elija la hora y los minutos.";
+            errorHora.style.display = "block";
+            bordeHora.style.borderColor = "#b00020";
+        }
+
+        if (!docValido || !fechaValida || !horaValida) {
+            e.preventDefault();
+            alert("Por favor complete los campos obligatorios: DNI, Fecha y Hora.");
+        }
+    });
+</script>
