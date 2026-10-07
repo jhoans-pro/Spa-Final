@@ -1,0 +1,241 @@
+@model List<Spa.Models.Cita>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Reporte de Citas";
+}
+
+<style>
+    .reporte-container {
+        padding: 10px 0;
+        font-family: inherit;
+    }
+    .kpi-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 20px 24px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+    .kpi-title {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #7a7a7a;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+    .kpi-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #2b2320;
+        line-height: 1.1;
+    }
+    .filter-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 22px 26px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.03);
+        margin-bottom: 24px;
+    }
+    .table-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 24px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.03);
+        overflow-x: auto;
+    }
+    .spa-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+    .spa-table th {
+        text-align: left;
+        padding: 14px 16px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #3b2f2f;
+        border-bottom: 2px solid #f0eae1;
+        background: transparent;
+    }
+    .spa-table td {
+        padding: 14px 16px;
+        font-size: 0.92rem;
+        color: #4a4a4a;
+        border-bottom: 1px solid #f3ece4;
+        vertical-align: middle;
+    }
+    .spa-table tbody tr:hover {
+        background-color: #faf7f2;
+    }
+    .btn-spa-primary {
+        background-color: #8c4327;
+        color: #fff;
+        border: none;
+        padding: 9px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.88rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: 0.2s ease;
+    }
+    .btn-spa-primary:hover {
+        background-color: #6d331d;
+        color: #fff;
+    }
+    .btn-spa-outline {
+        background: transparent;
+        color: #6b6b6b;
+        border: 1px solid #d8d0c5;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.88rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: 0.2s ease;
+    }
+    .btn-spa-outline:hover {
+        background-color: #f5efe6;
+        color: #333;
+    }
+    .btn-spa-export {
+        background-color: #3f2a24;
+        color: #fff;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.88rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: 0.2s ease;
+    }
+    .btn-spa-export:hover {
+        background-color: #2b1c17;
+        color: #fff;
+    }
+    .form-input-spa {
+        padding: 8px 12px;
+        border: 1px solid #dcd4c9;
+        border-radius: 8px;
+        background: #faf8f5;
+        font-size: 0.9rem;
+        color: #333;
+        outline: none;
+    }
+    .form-input-spa:focus {
+        border-color: #8c4327;
+        background: #fff;
+    }
+    .badge-confirmada {
+        background: #e6f4ea;
+        color: #137333;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+</style>
+
+<div class="reporte-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+        <h2 style="font-size: 1.6rem; font-weight: 800; color: #2e2624; margin: 0;">Reporte de Citas</h2>
+        @if (Model != null && Model.Count > 0)
+        {
+            <a asp-action="DescargarReporteCsv"
+               asp-route-fechaInicio="@ViewBag.FechaInicio"
+               asp-route-fechaFin="@ViewBag.FechaFin"
+               class="btn-spa-export">
+                <i class="fas fa-file-excel"></i> Descargar CSV / Excel
+            </a>
+        }
+    </div>
+
+    <!-- Indicadores -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 24px;">
+        <div class="kpi-card">
+            <div class="kpi-title">TOTAL DE CITAS</div>
+            <div class="kpi-value">@(Model != null ? Model.Count : 0)</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">MONTO TOTAL RECAUDADO</div>
+            <div class="kpi-value" style="color: #8c4327;">S/ @ViewBag.TotalRecaudado</div>
+        </div>
+    </div>
+
+    <!-- Filtros por Fecha -->
+    <div class="filter-card">
+        <form asp-action="ReporteCitas" method="get" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #665b57; margin-bottom: 6px;">Fecha Inicio</label>
+                <input type="date" name="fechaInicio" value="@ViewBag.FechaInicio" class="form-input-spa" />
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #665b57; margin-bottom: 6px;">Fecha Fin</label>
+                <input type="date" name="fechaFin" value="@ViewBag.FechaFin" class="form-input-spa" />
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button type="submit" class="btn-spa-primary">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+                <a asp-action="ReporteCitas" class="btn-spa-outline">
+                    <i class="fas fa-undo"></i> Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla de Datos -->
+    <div class="table-card">
+        @if (Model != null && Model.Count > 0)
+        {
+            <table class="spa-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;"># ID</th>
+                        <th>Cliente</th>
+                        <th>Servicio</th>
+                        <th>Fecha y Hora</th>
+                        <th style="text-align: center;">Personas</th>
+                        <th style="text-align: right;">Total</th>
+                        <th style="text-align: center;">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model)
+                    {
+                        <tr>
+                            <td style="font-weight: 600; color: #8c7f79;">#@c.Id</td>
+                            <td style="font-weight: 600; color: #2e2624;">@(c.Cliente?.Nombre ?? "Cliente #" + c.ClienteId)</td>
+                            <td>@(c.Servicio?.Nombre ?? "Servicio #" + c.ServicioId)</td>
+                            <td>@c.FechaHora.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td style="text-align: center;">@c.CantidadPersonas</td>
+                            <td style="text-align: right; font-weight: 700; color: #2e2624;">S/ @c.TotalFinal.ToString("F2")</td>
+                            <td style="text-align: center;">
+                                <span class="badge-confirmada">@(c.Confirmada ? "Confirmada" : "Pendiente")</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="text-align: center; padding: 40px 20px; color: #8c7f79;">
+                <i class="fas fa-calendar-times" style="font-size: 2.2rem; margin-bottom: 12px; color: #c4b5a8; display: block;"></i>
+                <p style="margin: 0; font-size: 0.95rem; font-weight: 600;">No se encontraron citas para el rango de fechas seleccionado.</p>
+            </div>
+        }
+    </div>
+</div>

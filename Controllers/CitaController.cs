@@ -284,5 +284,72 @@ namespace Spa.Controllers
             TempData["MensajeExito"] = "¡Cita registrada con éxito!";
             return RedirectToAction("Crear", "Cita");
         }
+    // GET: /Cita/ReporteCitas
+        [HttpGet]
+        public async Task<IActionResult> ReporteCitas(DateTime? fechaInicio, DateTime? fechaFin)
+        {
+            var consulta = _context.Citas
+                .Include(c => c.Cliente)
+                .Include(c => c.Servicio)
+                .AsQueryable();
+
+            if (fechaInicio.HasValue)
+            {
+                consulta = consulta.Where(c => c.FechaHora >= fechaInicio.Value.Date);
+            }
+
+            if (fechaFin.HasValue)
+            {
+                // Incluye todo el día hasta las 23:59:59
+                var finDia = fechaFin.Value.Date.AddDays(1).AddTicks(-1);
+                consulta = consulta.Where(c => c.FechaHora <= finDia);
+            }
+
+            var citas = await consulta.OrderByDescending(c => c.FechaHora).ToListAsync();
+
+            ViewBag.FechaInicio = fechaInicio?.ToString("yyyy-MM-dd");
+            ViewBag.FechaFin = fechaFin?.ToString("yyyy-MM-dd");
+            ViewBag.TotalRecaudado = citas.Sum(c => c.TotalFinal);
+
+            return View(citas);
+        }
+
+        // GET: /Cita/DescargarReporteCsv
+        [HttpGet]
+        public async Task<IActionResult> DescargarReporteCsv(DateTime? fechaInicio, DateTime? fechaFin)
+        {
+            var consulta = _context.Citas
+                .Include(c => c.Cliente)
+                .Include(c => c.Servicio)
+                .AsQueryable();
+
+            if (fechaInicio.HasValue)
+            {
+                consulta = consulta.Where(c => c.FechaHora >= fechaInicio.Value.Date);
+            }
+
+            if (fechaFin.HasValue)
+            {
+                var finDia = fechaFin.Value.Date.AddDays(1).AddTicks(-1);
+                consulta = consulta.Where(c => c.FechaHora <= finDia);
+            }
+
+            var citas = await consulta.OrderByDescending(c => c.FechaHora).ToListAsync();
+
+            var builder = new System.Text.StringBuilder();
+            builder.AppendLine("ID;Cliente;Servicio;Fecha y Hora;Personas;Total;Confirmada");
+
+            foreach (var item in citas)
+            {
+                var clienteNombre = item.Cliente != null ? $"{item.Cliente.Nombre} {item.Cliente.Apellido}".Trim() : "N/A";
+                var servicioNombre = item.Servicio != null ? item.Servicio.Nombre : "N/A";
+                var estado = item.Confirmada ? "Si" : "No";
+
+                builder.AppendLine($"{item.Id};{clienteNombre};{servicioNombre};{item.FechaHora:yyyy-MM-dd HH:mm};{item.CantidadPersonas};{item.TotalFinal};{estado}");
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(builder.ToString())).ToArray();
+            return File(bytes, "text/csv", $"Reporte_Citas_{DateTime.Now:yyyyMMdd_HHmm}.csv");
+        }
     }
 }
