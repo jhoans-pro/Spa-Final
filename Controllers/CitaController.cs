@@ -31,12 +31,19 @@ namespace Spa.Controllers
         [HttpGet]
         public async Task<IActionResult> Crear()
         {
-            ViewBag.Promociones = await _context.Promociones
-                .AsNoTracking()
-                .Where(p => p.Activa)
-                .ToListAsync();
+            var hoy = DateTime.Today;
 
-            return View("~/Views/Home/cita.cshtml");
+            ViewBag.Promociones = await _context.Promociones
+            .AsNoTracking()
+            .Where(p =>
+                p.Activa &&
+                p.FechaInicio.HasValue &&
+                p.FechaFin.HasValue &&
+                p.FechaInicio.Value <= hoy &&
+                p.FechaFin.Value >= hoy)
+            .ToListAsync();
+
+        return View("~/Views/Home/cita.cshtml");
         }
 
         private static readonly Dictionary<string, string> MapaServicios = new()
@@ -137,8 +144,16 @@ namespace Spa.Controllers
 
                 if (int.TryParse(idTexto, out int promoId))
                 {
+                    var hoy = DateTime.Today;
+
                     var promocion = await _context.Promociones
-                        .FirstOrDefaultAsync(p => p.Id == promoId && p.Activa);
+                        .FirstOrDefaultAsync(p =>
+                                p.Id == promoId &&
+                                p.Activa &&
+                                p.FechaInicio.HasValue &&
+                                p.FechaFin.HasValue &&
+                                p.FechaInicio.Value.Date <= hoy &&
+                                p.FechaFin.Value.Date >= hoy);
 
                     if (promocion != null)
                     {

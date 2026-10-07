@@ -42,6 +42,18 @@
         }
     </div>
 
+    <div class="admin-form-group">
+        <label asp-for="FechaInicio">Fecha de inicio</label>
+        <input asp-for="FechaInicio" type="date" />
+        <span asp-validation-for="FechaInicio" class="admin-validation"></span>
+    </div>
+
+    <div class="admin-form-group">
+        <label asp-for="FechaFin">Fecha de fin</label>
+        <input asp-for="FechaFin" type="date" />
+        <span asp-validation-for="FechaFin" class="admin-validation"></span>
+    </div>
+
     <div class="admin-form-group admin-form-check">
         <input asp-for="Activa" type="checkbox" />
         <label asp-for="Activa">Promoción activa</label>

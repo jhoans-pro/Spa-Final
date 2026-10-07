@@ -1,25 +1,36 @@
 
 using Microsoft.AspNetCore.Mvc;
-using Spa.Data;
+using Spa.Interfaces;
 
 namespace Spa.Controllers
 {
     public class PromocionesController : Controller
     {
-        private readonly SpaDbContext _context;
+        private readonly IPromocionService _promocionService;
 
-        public PromocionesController(SpaDbContext context)
+        public PromocionesController(IPromocionService promocionService)
         {
-            _context = context;
+            _promocionService = promocionService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var promociones = _context.Promociones
-                                      .Where(p => p.Activa)
-                                      .ToList();
+            // Al obtener las promociones, el servicio también
+            // desactiva las que ya se encuentran vencidas.
+            var promociones = await _promocionService.ObtenerTodasAsync();
 
-            return View("~/Views/Home/promociones.cshtml", promociones);
+            var hoy = DateTime.Today;
+
+            var promocionesVigentes = promociones
+                .Where(p =>
+                    p.Activa &&
+                    p.FechaInicio.HasValue &&
+                    p.FechaFin.HasValue &&
+                    p.FechaInicio.Value.Date <= hoy &&
+                    p.FechaFin.Value.Date >= hoy)
+                .ToList();
+
+            return View("~/Views/Home/promociones.cshtml", promocionesVigentes);
         }
     }
 }

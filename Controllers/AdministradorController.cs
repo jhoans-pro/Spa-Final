@@ -84,8 +84,23 @@ namespace Spa.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CrearPromocion(Promocion promocion)
         {
-            if (!ModelState.IsValid) return View(promocion);
+            if (promocion.FechaInicio.HasValue &&
+            promocion.FechaFin.HasValue &&
+            promocion.FechaFin.Value.Date < promocion.FechaInicio.Value.Date)
+        {
+            ModelState.AddModelError(
+                "FechaFin",
+                "La fecha de fin no puede ser anterior a la fecha de inicio."
+            );
+        }
+
+            if (!ModelState.IsValid)
+        {
+            return View(promocion);
+        }
+
             await _promocionService.CrearAsync(promocion);
+
             return RedirectToAction("Promociones");
         }
 
@@ -101,8 +116,23 @@ namespace Spa.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditarPromocion(Promocion promocion)
         {
-            if (!ModelState.IsValid) return View(promocion);
+            if (promocion.FechaInicio.HasValue &&
+                promocion.FechaFin.HasValue &&
+                promocion.FechaFin.Value.Date < promocion.FechaInicio.Value.Date)
+        {
+            ModelState.AddModelError(
+                "FechaFin",
+                "La fecha de fin no puede ser anterior a la fecha de inicio."
+            );
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(promocion);
+        }
+
             await _promocionService.ActualizarAsync(promocion);
+
             return RedirectToAction("Promociones");
         }
 
